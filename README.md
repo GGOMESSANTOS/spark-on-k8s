@@ -2,6 +2,8 @@
 
 Este projeto fornece um script Bash que configura um ambiente completo para trabalhar com Apache Spark, MinIO e Apache Airflow em um cluster Kubernetes local usando Minikube. O script instala e configura todas as dependências necessárias, incluindo kubectl, minikube, docker, helm, spark-operator, MinIO e Apache Airflow.
 
+##Você tem a opção de executar via Codespaces ou GitPod. Mas se quiser executar em outro ambiente, siga as instruções:
+
 ## Pré-requisitos
 
 - Sistema operacional Linux

@@ -13,8 +13,8 @@ Este projeto fornece um script Bash que configura um ambiente completo para trab
 1. Clone este repositório em sua máquina local:
 
    ```
-   git clone https://github.com/seu-usuario/seu-repositorio.git
-   cd seu-repositorio
+   git clone https://github.com/GGOMESSANTOS/spark-on-k8s
+   cd spark-on-k8s
    ```
 
 2. Torne o script `setup.sh` executável:

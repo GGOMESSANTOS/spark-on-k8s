@@ -1,36 +1,49 @@
 #!/bin/bash
 
-# Install dependencies
-sudo yum install -y wget tar gzip
+# Atualizar pacotes
+sudo apt-get update
 
-# Step 1: Install Spark with Kubernetes support
-SPARK_VERSION="3.3.2"
-SPARK_DOWNLOAD_URL="https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz"
+# Instalar dependências
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
 
-wget "${SPARK_DOWNLOAD_URL}"
-tar -xzf "spark-${SPARK_VERSION}-bin-hadoop3.tgz"
-rm "spark-${SPARK_VERSION}-bin-hadoop3.tgz"
+# Instalar Docker
+sudo apt-get install -y docker.io
+sudo systemctl start docker
+sudo systemctl enable docker
 
-# Step 2: Install Kubernetes client
-sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-sudo chmod +x kubectl
-sudo mv kubectl /usr/local/bin/
+# Instalar kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
-# Step 3: Configure kubectl to communicate with the DigitalOcean cluster
-DIGITALOCEAN_CLUSTER_NAME="<your-cluster-name>"
-doctl kubernetes cluster kubeconfig save "${DIGITALOCEAN_CLUSTER_NAME}"
+# Instalar Minikube
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube /usr/local/bin/
 
-# Step 4: Configure Spark to run on Kubernetes
-K8S_MASTER_URL="$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')"
-SPARK_IMAGE="apache/spark:v${SPARK_VERSION}"
+# Iniciar Minikube com driver Docker e 6GB de RAM
+minikube start --driver=docker --memory=6144
 
-cat <<EOF > "spark-${SPARK_VERSION}-bin-hadoop3/conf/spark-defaults.conf"
-spark.master=k8s://${K8S_MASTER_URL}
-spark.kubernetes.container.image=${SPARK_IMAGE}
-spark.kubernetes.namespace=spark
+# Instalar Helm
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+
+# Instalar Spark Operator
+helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+helm install spark-operator spark-operator/spark-operator --namespace spark-operator --create-namespace
+
+# Instalar MinIO
+helm repo add minio https://operator.min.io/
+helm install minio minio/minio --namespace minio-system --create-namespace --set rootUser=minio,rootPassword=minio123
+
+# Instalar Apache Airflow
+helm repo add apache-airflow https://airflow.apache.org
+helm install airflow apache-airflow/airflow --namespace airflow --create-namespace
+
+# Criar arquivo env com variáveis importantes
+cat << EOF > env.sh
+export MINIKUBE_IP=$(minikube ip)
+export MINIO_ROOT_USER=minio
+export MINIO_ROOT_PASSWORD=minio123
 EOF
 
-# Step 5: Create a namespace in Kubernetes for Spark
-kubectl create namespace spark
-
-echo "Apache Spark version ${SPARK_VERSION} has been installed and configured to run on the DigitalOcean Kubernetes cluster."
+echo "Instalação concluída. Por favor, execute 'source env.sh' para carregar as variáveis de ambiente."

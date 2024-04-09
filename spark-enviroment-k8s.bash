@@ -28,8 +28,8 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 
 # Instalar Spark Operator
-helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
-helm install spark-operator spark-operator/spark-operator --namespace spark-operator --create-namespace
+helm repo add spark-operator https://kubeflow.github.io/spark-operator
+helm install my-release spark-operator/spark-operator --namespace spark-operator --create-namespace
 
 # Instalar MinIO
 helm repo add minio https://operator.min.io/
